@@ -64,8 +64,12 @@ function fgt_activate() {
 register_deactivation_hook(__FILE__, 'fgt_deactivate');
 
 function fgt_deactivate() {
-    // Pulisci cache
-    wp_cache_flush();
+    // Pulisci cache solo del plugin
+    if (function_exists('wp_cache_flush_group')) {
+        wp_cache_flush_group('fgt_gallery');
+    } else {
+        wp_cache_flush();
+    }
     
     // Pulisci transients
     global $wpdb;
@@ -105,6 +109,12 @@ function fgt_uninstall() {
     // Pulisci tutti i transients
     $wpdb->query("DELETE FROM {$wpdb->options} WHERE option_name LIKE '_transient_fgt_%'");
     $wpdb->query("DELETE FROM {$wpdb->options} WHERE option_name LIKE '_transient_timeout_fgt_%'");
+
+    if (function_exists('wp_cache_flush_group')) {
+        wp_cache_flush_group('fgt_gallery');
+    } else {
+        wp_cache_flush();
+    }
 }
 
 // Aggiungi link alle impostazioni nella pagina dei plugin
@@ -145,13 +155,13 @@ function fgt_stats_page() {
     
     $percentage = $total_posts > 0 ? round(($gallery_posts / $total_posts) * 100, 2) : 0;
     
-    // Conta immagini totali nelle gallery
-    $total_images = $wpdb->get_var("
-        SELECT COUNT(meta_value) 
-        FROM {$wpdb->postmeta} 
-        WHERE meta_key = '_featured_gallery_ids' 
-        AND meta_value != ''
-    ") * 5; // Approssimativo
+    // Conta immagini totali nelle gallery (approssimativo)
+    $total_images = $wpdb->get_var(
+        $wpdb->prepare(
+            "SELECT COUNT(*) FROM {$wpdb->postmeta} WHERE meta_key = %s",
+            '_featured_gallery_ids'
+        )
+    ) * 5;
     
     ?>
     <div class="wrap">
@@ -259,8 +269,12 @@ function fgt_stats_page() {
         isset($_GET['_wpnonce']) &&
         wp_verify_nonce($_GET['_wpnonce'], 'fgt_clear_cache')
     ) {
-        // Pulisci cache
-        wp_cache_flush();
+        // Pulisci cache solo del plugin
+        if (function_exists('wp_cache_flush_group')) {
+            wp_cache_flush_group('fgt_gallery');
+        } else {
+            wp_cache_flush();
+        }
         delete_transient('fgt_posts_with_galleries');
         
         echo '<div class="notice notice-success"><p>Cache delle gallery pulita con successo!</p></div>';

@@ -391,12 +391,14 @@ class FeaturedGalleryTags {
             return self::$gallery_cache[$post_id][$meta_key];
         }
         
-        // Controlla cache transient
+        // Controlla cache transient solo se esiste un object cache persistente
+        $use_object_cache = function_exists('wp_using_ext_object_cache') && wp_using_ext_object_cache();
         $transient_key = 'fgt_meta_' . $post_id . '_' . md5($meta_key);
-        $cached_value = get_transient($transient_key);
-        
-        if ($cached_value !== false) {
-            return $cached_value;
+        if ($use_object_cache) {
+            $cached_value = get_transient($transient_key);
+            if ($cached_value !== false) {
+                return $cached_value;
+            }
         }
         
         // Fallback a get_post_meta
@@ -408,8 +410,10 @@ class FeaturedGalleryTags {
         }
         self::$gallery_cache[$post_id][$meta_key] = $value;
         
-        // Salva in transient per 1 ora
-        set_transient($transient_key, $value, HOUR_IN_SECONDS);
+        // Salva in transient per 1 ora solo con object cache
+        if ($use_object_cache) {
+            set_transient($transient_key, $value, HOUR_IN_SECONDS);
+        }
         
         return $value;
     }
@@ -439,9 +443,19 @@ class FeaturedGalleryTags {
         $output = '<div class="fgt-media-wrapper" data-post-id="' . esc_attr($post_id) . '">';
         
         if (!empty($gallery_ids)) {
+            // Pre-carica i meta degli attachment per ridurre le query
+            if (function_exists('update_meta_cache')) {
+                update_meta_cache('post', $gallery_ids);
+            }
+            // Pre-carica alt text delle immagini
+            $alts = array();
+            foreach ($gallery_ids as $aid) {
+                $alts[$aid] = get_post_meta($aid, '_wp_attachment_image_alt', true);
+            }
+
             // JSON encode sicuro con flag di sicurezza
             $gallery_ids_json = esc_attr(wp_json_encode(
-                $gallery_ids, 
+                $gallery_ids,
                 JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP
             ));
             
@@ -453,8 +467,8 @@ class FeaturedGalleryTags {
             $first_image_url = wp_get_attachment_image_url($first_id, $size);
             
             if ($first_image_url) {
-                // Ottieni alt text
-                $alt_text = get_post_meta($first_id, '_wp_attachment_image_alt', true);
+                // Alt text precaricato
+                $alt_text = isset($alts[$first_id]) ? $alts[$first_id] : '';
                 
                 $output .= sprintf(
                     '<img src="%s" class="fgt-image active" data-index="0" alt="%s" loading="eager" />',
@@ -468,7 +482,7 @@ class FeaturedGalleryTags {
                     $image_url = wp_get_attachment_image_url($image_id, $size);
                     
                     if ($image_url) {
-                        $alt_text = get_post_meta($image_id, '_wp_attachment_image_alt', true);
+                        $alt_text = isset($alts[$image_id]) ? $alts[$image_id] : '';
                         
                         $output .= sprintf(
                             '<img data-src="%s" class="fgt-image" data-index="%d" alt="%s" loading="lazy" />',
