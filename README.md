@@ -3,8 +3,11 @@
 Tags: gallery, featured-image, autoplay, hover, tags
 
 Stable tag: 2.0.0
+
 Requires PHP: 7.0
+
 License: Apache License 2.0
+
 License URI: https://www.apache.org/licenses/LICENSE-2.0
 
 Sostituisce la featured image con una gallery interattiva di 5 immagini con autoplay al hover.
