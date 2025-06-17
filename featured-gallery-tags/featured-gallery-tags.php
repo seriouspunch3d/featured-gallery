@@ -163,15 +163,15 @@ function fgt_stats_page() {
                 <tbody>
                     <tr>
                         <td><strong>Post totali pubblicati:</strong></td>
-                        <td><?php echo number_format($total_posts); ?></td>
+                        <td><?php echo esc_html( number_format_i18n( $total_posts ) ); ?></td>
                     </tr>
                     <tr>
                         <td><strong>Post con gallery attiva:</strong></td>
-                        <td><?php echo number_format($gallery_posts); ?> (<?php echo $percentage; ?>%)</td>
+                        <td><?php echo esc_html( number_format_i18n( $gallery_posts ) ); ?> (<?php echo esc_html( $percentage ); ?>%)</td>
                     </tr>
                     <tr>
                         <td><strong>Immagini totali nelle gallery:</strong></td>
-                        <td>~<?php echo number_format($total_images); ?></td>
+                        <td>~<?php echo esc_html( number_format_i18n( $total_images ) ); ?></td>
                     </tr>
                 </tbody>
             </table>
@@ -195,11 +195,11 @@ function fgt_stats_page() {
             }
             ?>
             <p style="font-size: 18px;">
-                Status: <span style="color: <?php echo $performance_color; ?>; font-weight: bold;">
-                    <?php echo $performance_text; ?>
+                Status: <span style="color: <?php echo esc_attr( $performance_color ); ?>; font-weight: bold;">
+                    <?php echo esc_html( $performance_text ); ?>
                 </span>
             </p>
-            <p><?php echo $performance_desc; ?></p>
+            <p><?php echo esc_html( $performance_desc ); ?></p>
             
             <?php if ($gallery_posts > 1000): ?>
             <h3>💡 Suggerimenti per migliorare le performance:</h3>
@@ -235,15 +235,15 @@ function fgt_stats_page() {
                 <tbody>
                     <tr>
                         <td><strong>Versione Plugin:</strong></td>
-                        <td><?php echo FGT_VERSION; ?></td>
+                        <td><?php echo esc_html( FGT_VERSION ); ?></td>
                     </tr>
                     <tr>
                         <td><strong>Cache Attiva:</strong></td>
-                        <td><?php echo defined('LSCWP_V') ? '✅ LiteSpeed Cache' : '❌ Nessuna cache rilevata'; ?></td>
+                        <td><?php echo esc_html( defined('LSCWP_V') ? '✅ LiteSpeed Cache' : '❌ Nessuna cache rilevata' ); ?></td>
                     </tr>
                     <tr>
                         <td><strong>Memoria PHP:</strong></td>
-                        <td><?php echo ini_get('memory_limit'); ?></td>
+                        <td><?php echo esc_html( ini_get('memory_limit') ); ?></td>
                     </tr>
                 </tbody>
             </table>
@@ -251,8 +251,14 @@ function fgt_stats_page() {
     </div>
     <?php
     
-    // Gestisci azione clear cache
-    if (isset($_GET['action']) && $_GET['action'] == 'clear-cache' && wp_verify_nonce($_GET['_wpnonce'], 'fgt_clear_cache')) {
+    // Gestisci azione clear cache in modo sicuro
+    if (
+        current_user_can('manage_options') &&
+        isset($_GET['action']) &&
+        'clear-cache' === sanitize_key($_GET['action']) &&
+        isset($_GET['_wpnonce']) &&
+        wp_verify_nonce($_GET['_wpnonce'], 'fgt_clear_cache')
+    ) {
         // Pulisci cache
         wp_cache_flush();
         delete_transient('fgt_posts_with_galleries');
