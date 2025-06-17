@@ -4,7 +4,7 @@
  * Description: Sostituisce la featured image con una gallery di 5 immagini con autoplay al hover + sistema targhette TRAILER/COMPLETO. Ottimizzato per siti con migliaia di post.
  * Version: 2.0.0
  * Author: Porno Zero
- * License: GPL v2 or later
+ * License: Apache License 2.0
  * Text Domain: featured-gallery-tags
  * 
  * Ottimizzato per siti con 10k+ post
