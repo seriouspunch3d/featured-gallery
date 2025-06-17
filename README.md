@@ -1,7 +1,7 @@
 === Featured Gallery Tags ===
+
 Tags: gallery, featured-image, autoplay, hover, tags
-Requires at least: 5.0
-Tested up to: 6.4
+
 Stable tag: 2.0.0
 Requires PHP: 7.0
 License: Apache License 2.0
